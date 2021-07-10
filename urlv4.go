@@ -21,14 +21,14 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"math/big"
 	"net"
 	"net/url"
 	"regexp"
 	"strconv"
 
-	"github.com/ethereum/go-ethereum/common/math"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/p2p/enr"
+	"github.com/protolambda/go-enr"
+	"github.com/protolambda/go-eth-crypto"
 )
 
 var (
@@ -197,7 +197,27 @@ func (n *Node) URLv4() string {
 // PubkeyToIDV4 derives the v4 node address from the given public key.
 func PubkeyToIDV4(key *ecdsa.PublicKey) ID {
 	e := make([]byte, 64)
-	math.ReadBits(key.X, e[:len(e)/2])
-	math.ReadBits(key.Y, e[len(e)/2:])
+	readBits(key.X, e[:len(e)/2])
+	readBits(key.Y, e[len(e)/2:])
 	return ID(crypto.Keccak256Hash(e))
+}
+
+const (
+	// number of bits in a big.Word
+	wordBits = 32 << (uint64(^big.Word(0)) >> 63)
+	// number of bytes in a big.Word
+	wordBytes = wordBits / 8
+)
+
+// readBits encodes the absolute value of bigint as big-endian bytes. Callers must ensure
+// that buf has enough space. If buf is too short the result will be incomplete.
+func readBits(bigint *big.Int, buf []byte) {
+	i := len(buf)
+	for _, d := range bigint.Bits() {
+		for j := 0; j < wordBytes && i > 0; j++ {
+			i--
+			buf[i] = byte(d)
+			d >>= 8
+		}
+	}
 }

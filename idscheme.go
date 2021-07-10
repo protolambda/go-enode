@@ -21,10 +21,9 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/ethereum/go-ethereum/common/math"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/p2p/enr"
-	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/protolambda/go-enr"
+	"github.com/protolambda/go-eth-crypto"
+	"github.com/protolambda/go-rlp"
 	"golang.org/x/crypto/sha3"
 )
 
@@ -84,8 +83,8 @@ func (V4ID) NodeAddr(r *enr.Record) []byte {
 		return nil
 	}
 	buf := make([]byte, 64)
-	math.ReadBits(pubkey.X, buf[:32])
-	math.ReadBits(pubkey.Y, buf[32:])
+	readBits(pubkey.X, buf[:32])
+	readBits(pubkey.Y, buf[32:])
 	return crypto.Keccak256(buf)
 }
 
